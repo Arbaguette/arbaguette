@@ -2,7 +2,6 @@
 name: CI/CD using github actions & docker
 
 # event trigger
-# main이나 develop 브랜치에 push가 되었을 때 실행
 on:
   push:
     branches: [ "refactor" ]
@@ -32,7 +31,25 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-
+            
+      - name: make application.yml
+        if: |
+          contains(github.ref, 'refactor')
+        run: |
+          cd ./backend/Arbaguette/src/main/resources # resources 폴더로 이동
+          touch ./application.yml # application.yml 생성
+          echo "${{ secrets.YML }}" > ./application.yml # github actions에서 설정한 값을 application.yml 파일에 쓰기
+        shell: bash  
+        
+      - name: make bonus-application.yml
+        if: |
+          contains(github.ref, 'refactor')
+        run: |
+          cd ./backend/bonus/src/main/resources # resources 폴더로 이동
+          touch ./application.yml # application.yml 생성
+          echo "${{ secrets.YML_BONUS }}" > ./application.yml # github actions에서 설정한 값을 application.yml 파일에 쓰기
+        shell: bash 
+        
       - name: Build with Gradle
         run: ./gradlew build -x test
 
