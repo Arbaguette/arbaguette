@@ -44,14 +44,14 @@ jobs:
 
       - name: Build Arbaguette
         run: |
-          chmod +x ./gradlew
           cd ./backend/Arbaguette
+          chmod +x ./gradlew
           ./gradlew build -x test
 
       - name: Build Bonus
         run: |
-          chmod +x ./gradlew
           cd ./backend/bonus
+          chmod +x ./gradlew
           ./gradlew build -x test
 
       - name: Docker build & push Arbaguette
