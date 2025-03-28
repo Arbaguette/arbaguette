@@ -1,7 +1,5 @@
-# github repository actions 페이지에 나타날 이름
 name: CI/CD using github actions & docker
 
-# event trigger
 on:
   push:
     branches: [ "refactor" ]
@@ -15,13 +13,13 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
-      
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
-          
+
       - name: Gradle Caching
         uses: actions/cache@v3
         with:
@@ -31,44 +29,57 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-            
-      - name: make application.yml
-        if: |
-          contains(github.ref, 'refactor')
-        run: |
-          cd ./backend/Arbaguette/src/main/resources # resources 폴더로 이동
-          touch ./application.yml # application.yml 생성
-          echo "${{ secrets.YML }}" > ./application.yml # github actions에서 설정한 값을 application.yml 파일에 쓰기
-        shell: bash  
-        
-      - name: make bonus-application.yml
-        if: |
-          contains(github.ref, 'refactor')
-        run: |
-          cd ./backend/bonus/src/main/resources # resources 폴더로 이동
-          touch ./application.yml # application.yml 생성
-          echo "${{ secrets.YML_BONUS }}" > ./application.yml # github actions에서 설정한 값을 application.yml 파일에 쓰기
-        shell: bash 
-        
-      - name: Build with Gradle
-        run: ./gradlew build -x test
 
-      - name: Docker build & push to prod
+      - name: make Arbaguette application.yml
+        run: |
+          cd ./backend/Arbaguette/src/main/resources
+          echo "${{ secrets.YML }}" > application.yml
+        shell: bash
+
+      - name: make Bonus application.yml
+        run: |
+          cd ./backend/bonus/src/main/resources
+          echo "${{ secrets.YML_BONUS }}" > application.yml
+        shell: bash
+
+      - name: Build Arbaguette
+        run: |
+          cd ./backend/Arbaguette
+          ./gradlew build -x test
+
+      - name: Build Bonus
+        run: |
+          cd ./backend/bonus
+          ./gradlew build -x test
+
+      - name: Docker build & push Arbaguette
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile-dev -t ${{ secrets.DOCKER_USERNAME }}/docker-test-prod .
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-prod
+          docker build -f backend/Arbaguette/Dockerfile-dev -t ${{ secrets.DOCKER_USERNAME }}/docker-arba-prod backend/Arbaguette
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-arba-prod
+
+      - name: Docker build & push Bonus
+        run: |
+          docker build -f backend/bonus/Dockerfile-dev -t ${{ secrets.DOCKER_USERNAME }}/docker-bonus-prod backend/bonus
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-bonus-prod
 
       - name: Deploy to production server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST_PROD }} # EC2 퍼블릭 IPv4 DNS
+          host: ${{ secrets.HOST_PROD }}
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
-          envs: GITHUB_SHA
           script: |
-            sudo docker stop docker-test-prod || true
-            sudo docker rm docker-test-prod || true
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test-prod
-            sudo docker run -d --name docker-test-prod -p 8082:8082 ${{ secrets.DOCKER_USERNAME }}/docker-test-prod
+            # Arbaguette
+            sudo docker stop docker-arba-prod || true
+            sudo docker rm docker-arba-prod || true
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-arba-prod
+            sudo docker run -d --name docker-arba-prod -p 8082:8082 ${{ secrets.DOCKER_USERNAME }}/docker-arba-prod
+
+            # Bonus
+            sudo docker stop docker-bonus-prod || true
+            sudo docker rm docker-bonus-prod || true
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-bonus-prod
+            sudo docker run -d --name docker-bonus-prod -p 8083:8083 ${{ secrets.DOCKER_USERNAME }}/docker-bonus-prod
+
             sudo docker image prune -f
