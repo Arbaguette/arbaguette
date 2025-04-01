@@ -131,7 +131,7 @@ public class UserService {
         headerMap.put("userKey", userKey);
 
         accountRequestBody.put("Header", headerMap);
-        accountRequestBody.put("accountTypeUniqueNo", "001-1-4ee0c9dcba3e4d");
+        accountRequestBody.put("accountTypeUniqueNo", "001-1-dde34ab0a5c249");
 
         // WebClient를 사용한 계좌 생성 요청
         Map<String, Map<String, Object>> accountResponseBody = webClient.post()
