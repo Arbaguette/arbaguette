@@ -76,12 +76,12 @@ jobs:
             sudo docker stop docker-arba-prod || true
             sudo docker rm docker-arba-prod || true
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-arba-prod
-            sudo docker run -d --name docker-arba-prod -p 8082:8082 ${{ secrets.DOCKER_USERNAME }}/docker-arba-prod
+            sudo docker run -d --name docker-arba-prod -p 8082:8080 ${{ secrets.DOCKER_USERNAME }}/docker-arba-prod
 
             # Bonus
             sudo docker stop docker-bonus-prod || true
             sudo docker rm docker-bonus-prod || true
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-bonus-prod
-            sudo docker run -d --name docker-bonus-prod -p 8083:8083 ${{ secrets.DOCKER_USERNAME }}/docker-bonus-prod
+            sudo docker run -d --name docker-bonus-prod -p 8083:8080 ${{ secrets.DOCKER_USERNAME }}/docker-bonus-prod
 
             sudo docker image prune -f
