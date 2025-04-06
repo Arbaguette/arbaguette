@@ -6,6 +6,7 @@ import com.lucky.arbaguette.common.exception.DuplicateException;
 import com.lucky.arbaguette.common.exception.NotFoundException;
 import com.lucky.arbaguette.common.exception.UnAuthorizedException;
 import com.lucky.arbaguette.common.service.NotificationService;
+import com.lucky.arbaguette.common.util.EncryptUtil;
 import com.lucky.arbaguette.common.util.S3Util;
 import com.lucky.arbaguette.company.domain.Company;
 import com.lucky.arbaguette.company.repository.CompanyRepository;
@@ -38,6 +39,7 @@ public class ContractService {
     private final S3Util s3Util;
     private final NotificationService notificationService;
     private final PdfUtil pdfUtil;
+    private final EncryptUtil encryptUtil;
 
     @Transactional
     public void saveContract(CustomUserDetails customUserDetails, ContractSaveRequest contractSaveRequest,
@@ -106,7 +108,7 @@ public class ContractService {
         List<WorkingDayInfo> workingDayInfos = contractWorkingDayRepository.findAllByContract(contract).stream()
                 .map(WorkingDayInfo::to)
                 .toList();
-        return ContractInfo.from(crew.getCompany(), crew, contract, workingDayInfos);
+        return ContractInfo.from(crew.getCompany(), crew, contract, workingDayInfos, encryptUtil);
     }
 
     public String generateContractHtml(Contract contract) {

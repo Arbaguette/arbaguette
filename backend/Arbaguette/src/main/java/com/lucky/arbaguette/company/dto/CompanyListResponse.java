@@ -1,5 +1,6 @@
 package com.lucky.arbaguette.company.dto;
 
+import com.lucky.arbaguette.common.util.EncryptUtil;
 import com.lucky.arbaguette.company.domain.Company;
 
 import java.util.List;
@@ -14,8 +15,8 @@ public record CompanyListResponse(List<CompanyList> companies) {
                               String name,
                               String address) {
 
-        public static CompanyList of(Company company){
-            return new CompanyList(company.getCompanyId(), company.getName(), company.getAddress());
+        public static CompanyList of(Company company, EncryptUtil encryptUtil){
+            return new CompanyList(company.getCompanyId(), encryptUtil.decryptToString(company.getName()), encryptUtil.decryptToString(company.getAddress()));
         }
     }
 }

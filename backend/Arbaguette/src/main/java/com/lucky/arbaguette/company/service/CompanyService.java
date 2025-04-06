@@ -19,6 +19,7 @@ import com.lucky.arbaguette.common.exception.ForbiddenException;
 import com.lucky.arbaguette.common.exception.InternetServerErrorException;
 import com.lucky.arbaguette.common.exception.NotFoundException;
 import com.lucky.arbaguette.common.exception.UnAuthorizedException;
+import com.lucky.arbaguette.common.util.EncryptUtil;
 import com.lucky.arbaguette.company.dto.CompanyInfo;
 import com.lucky.arbaguette.company.dto.CompanyListResponse;
 import com.lucky.arbaguette.company.dto.CompanyListResponse.CompanyList;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.encrypt.AesBytesEncryptor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,7 +42,7 @@ public class CompanyService {
 
     private final BossRepository bossRepository;
     private final CompanyRepository companyRepository;
-
+    private final EncryptUtil encryptUtil;
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "png");
 
     public CompanyInfo ocrImage(MultipartFile file) throws IOException {
@@ -113,7 +115,7 @@ public class CompanyService {
         }
         Boss boss = bossRepository.findByEmail(customUserDetails.getUsername())
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
-        companyRepository.save(companyInfo.toCompany(boss));
+        companyRepository.save(companyInfo.toCompany(boss, encryptUtil));
     }
 
     public CompanyListResponse getCompanies(CustomUserDetails customUserDetails) {
@@ -122,9 +124,9 @@ public class CompanyService {
         }
         return of(
                 companyRepository.findAllByBoss_Email(customUserDetails.getUsername()).stream()
-                        .map(CompanyList::of)
+                        .map(company -> CompanyList.of(company, encryptUtil))
                         .toList()
-        );
+       );
     }
 
 }
