@@ -1,5 +1,6 @@
 package com.lucky.arbaguette.contract.domain.dto;
 
+import com.lucky.arbaguette.common.util.EncryptUtil;
 import com.lucky.arbaguette.company.domain.Company;
 import com.lucky.arbaguette.contract.domain.Contract;
 import com.lucky.arbaguette.contract.domain.TaxType;
@@ -25,12 +26,13 @@ public record ContractInfo(int contractId,
                            String crewSign,
                            String url) {
 
-    public static ContractInfo from(Company company, Crew crew, Contract contract, List<WorkingDayInfo> workingDayInfoList) {
+    public static ContractInfo from(Company company, Crew crew, Contract contract,
+        List<WorkingDayInfo> workingDayInfoList, EncryptUtil encryptUtil) {
         return new ContractInfo(
                 contract.getContractId(),
-                company.getName(),
-                company.getAddress(),
-                company.getRepresentative(),
+                encryptUtil.decryptToString(company.getName()),
+                encryptUtil.decryptToString(company.getAddress()),
+                encryptUtil.decryptToString(company.getRepresentative()),
                 crew.getName(),
                 crew.getTel(),
                 contract.getStartDate(),
