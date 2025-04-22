@@ -54,7 +54,7 @@ public class BonusLockService {
 
         if (bonus.isRemain()) {
             bonus.decrementMoney();
-            Optional<BonusCrew> bonusCrew = bonusCrewRepository.findById_BonusIdAndId_CrewId(bonus.getBonusId(),
+            Optional<BonusCrew> bonusCrew = bonusCrewRepository.findByIdBonusIdAndIdCrewId(bonus.getBonusId(),
                     crew.getCrewId());
 
             if (bonusCrew.isPresent()) {

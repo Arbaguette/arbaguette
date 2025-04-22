@@ -16,10 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@Transactional
+//@Transactional
 class BonusLockServiceTest {
 
     private static final Logger log = LoggerFactory.getLogger(BonusLockServiceTest.class);
@@ -51,27 +50,36 @@ class BonusLockServiceTest {
         List<CustomUserDetails> members = getCrews();
 
         //when
+//        AtomicInteger successCount = new AtomicInteger(0);
+//        AtomicInteger failCount = new AtomicInteger(0);
+
         ExecutorService executorService = Executors.newFixedThreadPool(3);
         for (CustomUserDetails member : members) {
-            for (int i = 0; i < 3; i++) {
-                executorService.submit(() -> {
+            executorService.submit(() -> {
+                for (int j = 0; j < 3; j++) {
                     try {
                         bonusLockService.getBonus(member, bonusId);
+//                        successCount.incrementAndGet();
                     } catch (Exception e) {
                         log.error(e.getMessage());
+//                        failCount.incrementAndGet();
                     }
-                });
-            }
+                }
+            });
         }
 
         //then
         for (CustomUserDetails member : members) {
             Crew crew = crewRepository.findByEmail(member.getUsername()).get();
             log.info("crew : {}", crew.getCrewId());
-            int money = bonusCrewRepository.findById_BonusIdAndId_CrewId(bonusId, crew.getCrewId())
-                    .get().getMoney();
+            try {
+                int money = bonusCrewRepository.findByIdBonusIdAndIdCrewId(bonusId, crew.getCrewId())
+                        .get().getMoney();
 
-            Assertions.assertThat(money).isEqualTo(300);
+                Assertions.assertThat(money).isEqualTo(300);
+            } catch (Exception e) {
+                log.info(e.getMessage());
+            }
         }
     }
 

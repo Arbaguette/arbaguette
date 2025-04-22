@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BonusCrewRepository extends JpaRepository<BonusCrew, BonusCrewId> {
 
-    Optional<BonusCrew> findById_BonusIdAndId_CrewId(int bonusId, int crewId);
+    Optional<BonusCrew> findByIdBonusIdAndIdCrewId(int bonusId, int crewId);
 }
