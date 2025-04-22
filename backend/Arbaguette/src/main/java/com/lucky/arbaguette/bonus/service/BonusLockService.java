@@ -49,7 +49,7 @@ public class BonusLockService {
         Crew crew = crewRepository.findByEmail(customUserDetails.getUsername())
                 .orElseThrow(() -> new NotFoundException("알바생을 찾을 수 없습니다."));
 
-        Bonus bonus = bonusRepository.findById(bonusId)
+        Bonus bonus = bonusRepository.findByIdForUpdate(bonusId)
                 .orElseThrow(() -> new NotFoundException("보너스를 찾을 수 없습니다."));
 
         if (bonus.isRemain()) {

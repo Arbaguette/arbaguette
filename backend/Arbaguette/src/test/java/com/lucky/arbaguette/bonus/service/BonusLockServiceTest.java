@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ class BonusLockServiceTest {
 
     @DisplayName("Crew1 : 300, Crew2 : 300, Crew3 : 300를 가져간다.")
     @Test
-    void bonusLockServiceTest() {
+    void bonusLockServiceTest() throws InterruptedException {
         //given
         CustomUserDetails customUserDetails = new CustomUserDetails(
                 new CommonUserInfo(
@@ -52,7 +53,8 @@ class BonusLockServiceTest {
         //when
 //        AtomicInteger successCount = new AtomicInteger(0);
 //        AtomicInteger failCount = new AtomicInteger(0);
-
+        // 시간 측정 시작
+        long startTime = System.nanoTime();
         ExecutorService executorService = Executors.newFixedThreadPool(3);
         for (CustomUserDetails member : members) {
             executorService.submit(() -> {
@@ -67,19 +69,26 @@ class BonusLockServiceTest {
                 }
             });
         }
-
+        // 모든 작업이 끝날 때까지 대기
+        //새로운 작업을 더 이상 받지 않음
+        executorService.shutdown();
+        //shutdown() 이후, 스레드들이 모두 작업을 끝날 때까지 최대 10초 기다림
+        boolean terminated = executorService.awaitTermination(10, TimeUnit.SECONDS);
+        if (!terminated) {
+            log.warn("스레드 작업이 시간 내에 끝나지 않았습니다.");
+        }
+        // 시간 측정 종료
+        long endTime = System.nanoTime();
+        long durationMs = (endTime - startTime) / 1_000_000; // 밀리초로 변환
+        log.info("✅ 테스트 총 수행 시간: {}ms", durationMs);
         //then
         for (CustomUserDetails member : members) {
             Crew crew = crewRepository.findByEmail(member.getUsername()).get();
             log.info("crew : {}", crew.getCrewId());
-            try {
-                int money = bonusCrewRepository.findByIdBonusIdAndIdCrewId(bonusId, crew.getCrewId())
+            int money = bonusCrewRepository.findByIdBonusIdAndIdCrewId(bonusId, crew.getCrewId())
                         .get().getMoney();
+            Assertions.assertThat(money).isEqualTo(300);
 
-                Assertions.assertThat(money).isEqualTo(300);
-            } catch (Exception e) {
-                log.info(e.getMessage());
-            }
         }
     }
 
