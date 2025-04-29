@@ -33,4 +33,13 @@ public class Bonus {
         this.boss = boss;
         this.money = money;
     }
+
+    public boolean isRemain() {
+        return money >= 100;
+    }
+
+    public void decrementMoney() {
+        money -= 100;
+    }
+
 }
