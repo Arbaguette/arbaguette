@@ -11,9 +11,11 @@ import com.lucky.arbaguette.common.exception.BadRequestException;
 import com.lucky.arbaguette.common.exception.NotFoundException;
 import com.lucky.arbaguette.common.service.BankService;
 import com.lucky.arbaguette.common.service.NotificationService;
+import com.lucky.arbaguette.company.domain.Company;
 import com.lucky.arbaguette.company.repository.CompanyRepository;
 import com.lucky.arbaguette.crew.domain.Crew;
 import com.lucky.arbaguette.crew.repository.CrewRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -41,7 +43,7 @@ public class BonusService {
         Boss boss = bossRepository.findByEmail(customUserDetails.getUsername())
                 .orElseThrow(() -> new NotFoundException("사장님을 찾을 수 없습니다."));
 
-        bankService.depositAccountWithdraw(boss, money);
+        //bankService.depositAccountWithdraw(boss, money);
 
         Bonus bonus = bonusRepository.save(Bonus.builder()
                 .boss(boss)
@@ -50,16 +52,17 @@ public class BonusService {
 
         bonusRedisRepository.save(bonus.getBonusId(), money / 100);
 
-        for (Crew crew : crewRepository.findByCompany(
-                companyRepository.findByCompanyIdAndBoss(companyId, boss).get())) {
-            notificationService.sendNotification(
-                    crew.getExpoPushToken(),
-                    "빵뿌리기 시작",
-                    "빵뿌리기가 시작되었습니다! 최대한 빨리 클릭하여 빵을 먹어봐요!",
-                    "arbaguette://crew/authorized/banking/event?bonusId=" + bonus.getBonusId()
-//                    "arbaguette://crew/authorized/banking/transaction" //빵줍기 url 변경해야함 !!!!!!
-            );
-        }
+//        Company company = companyRepository.findByCompanyIdAndBoss(companyId, boss).get();
+//        List<Crew> crews = crewRepository.findByCompany(company);
+//        for (Crew crew : crews) {
+//            notificationService.sendNotification(
+//                    crew.getExpoPushToken(),
+//                    "빵뿌리기 시작",
+//                    "빵뿌리기가 시작되었습니다! 최대한 빨리 클릭하여 빵을 먹어봐요!",
+//                    "arbaguette://crew/authorized/banking/event?bonusId=" + bonus.getBonusId()
+////                    "arbaguette://crew/authorized/banking/transaction" //빵줍기 url 변경해야함 !!!!!!
+//            );
+//        }
     }
 
     public void getBonus(CustomUserDetails customUserDetails, int bonusId) {
