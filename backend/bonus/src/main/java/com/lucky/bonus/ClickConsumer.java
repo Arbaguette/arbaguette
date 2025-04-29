@@ -51,58 +51,58 @@ public class ClickConsumer {
                                     .build()
                     ));
             click.increaseClickCnt();
-            if (kafkaMsg.flag()) {
-                log.info("flag is true, processing...");
-                for (Click clicked : clickRepository.findAllByBonusId(kafkaMsg.bonusId())) {
-
-                    Map<String, Object> accountRequestBody = new HashMap<>();
-                    Map<String, String> headerMap = new HashMap<>();
-
-                    Date today = new Date();
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-                    String formattedDate = formatter.format(today);
-
-                    SimpleDateFormat timeFormatter = new SimpleDateFormat("HHmmss");
-                    String formattedTime = timeFormatter.format(today);
-
-                    headerMap.put("apiName", "updateDemandDepositAccountDeposit");
-                    headerMap.put("transmissionDate", formattedDate);
-                    headerMap.put("transmissionTime", formattedTime);
-                    headerMap.put("institutionCode", "00100");
-                    headerMap.put("fintechAppNo", "001");
-                    headerMap.put("apiServiceCode", "updateDemandDepositAccountDeposit");
-                    headerMap.put("institutionTransactionUniqueNo", formattedDate + formattedTime + "000000");
-                    headerMap.put("apiKey", financialApiKey);
-                    headerMap.put("userKey", clicked.getUserKey());
-
-                    accountRequestBody.put("Header", headerMap);
-                    accountRequestBody.put("accountNo", clicked.getAccountNo());
-                    accountRequestBody.put("transactionBalance", String.valueOf(clicked.getCnt()*100));
-                    accountRequestBody.put("transactionSummary", "빵뿌리기 보너스 입금");
-
-                    webClient.post()
-                            .uri(financialApiUrl + "/v1/edu/demandDeposit/updateDemandDepositAccountDeposit")
-                            .body(BodyInserters.fromValue(accountRequestBody))
-                            .retrieve()
-                            .bodyToMono(Map.class)
-                            .block();
-
-                    log.info(clicked.getAccountNo()+"송금완료");
-
-                    notificationService.sendNotification(
-                            clicked.getExpoPushToken(),
-                            clicked.getCnt()*100 + "원 입급",
-                            "빵뿌리기 이벤트 입금",
-                            "arbaguette://crew/authorized/banking/transaction"
-                    );
-
-
-                    Thread.sleep(1000);
-
-
-                }
-
-            }
+//            if (kafkaMsg.flag()) {
+//                log.info("flag is true, processing...");
+//                for (Click clicked : clickRepository.findAllByBonusId(kafkaMsg.bonusId())) {
+//
+//                    Map<String, Object> accountRequestBody = new HashMap<>();
+//                    Map<String, String> headerMap = new HashMap<>();
+//
+//                    Date today = new Date();
+//                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+//                    String formattedDate = formatter.format(today);
+//
+//                    SimpleDateFormat timeFormatter = new SimpleDateFormat("HHmmss");
+//                    String formattedTime = timeFormatter.format(today);
+//
+//                    headerMap.put("apiName", "updateDemandDepositAccountDeposit");
+//                    headerMap.put("transmissionDate", formattedDate);
+//                    headerMap.put("transmissionTime", formattedTime);
+//                    headerMap.put("institutionCode", "00100");
+//                    headerMap.put("fintechAppNo", "001");
+//                    headerMap.put("apiServiceCode", "updateDemandDepositAccountDeposit");
+//                    headerMap.put("institutionTransactionUniqueNo", formattedDate + formattedTime + "000000");
+//                    headerMap.put("apiKey", financialApiKey);
+//                    headerMap.put("userKey", clicked.getUserKey());
+//
+//                    accountRequestBody.put("Header", headerMap);
+//                    accountRequestBody.put("accountNo", clicked.getAccountNo());
+//                    accountRequestBody.put("transactionBalance", String.valueOf(clicked.getCnt()*100));
+//                    accountRequestBody.put("transactionSummary", "빵뿌리기 보너스 입금");
+//
+//                    webClient.post()
+//                            .uri(financialApiUrl + "/v1/edu/demandDeposit/updateDemandDepositAccountDeposit")
+//                            .body(BodyInserters.fromValue(accountRequestBody))
+//                            .retrieve()
+//                            .bodyToMono(Map.class)
+//                            .block();
+//
+//                    log.info(clicked.getAccountNo()+"송금완료");
+//
+////                    notificationService.sendNotification(
+////                            clicked.getExpoPushToken(),
+////                            clicked.getCnt()*100 + "원 입급",
+////                            "빵뿌리기 이벤트 입금",
+////                            "arbaguette://crew/authorized/banking/transaction"
+////                    );
+//
+//
+//                    Thread.sleep(1000);
+//
+//
+//                }
+//
+//            }
         }catch (Exception e){
             log.error("Error in listener", e);
         }
