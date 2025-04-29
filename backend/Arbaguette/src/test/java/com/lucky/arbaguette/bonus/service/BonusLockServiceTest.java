@@ -28,6 +28,9 @@ class BonusLockServiceTest {
     private BonusLockService bonusLockService;
 
     @Autowired
+    private BonusService bonusService;
+
+    @Autowired
     private BonusCrewRepository bonusCrewRepository;
 
     @Autowired
@@ -44,7 +47,7 @@ class BonusLockServiceTest {
                         "BOSS"
                 )
         );
-        int bonusId = bonusLockService.spreadBonus(customUserDetails, 900, 1);
+        int bonusId = bonusLockService.spreadBonus(customUserDetails, 90_000, 1);
 
         log.info("bonusId : {}", bonusId);
 
@@ -58,7 +61,7 @@ class BonusLockServiceTest {
         ExecutorService executorService = Executors.newFixedThreadPool(3);
         for (CustomUserDetails member : members) {
             executorService.submit(() -> {
-                for (int j = 0; j < 3; j++) {
+                for (int j = 0; j < 300; j++) {
                     try {
                         bonusLockService.getBonus(member, bonusId);
 //                        successCount.incrementAndGet();
@@ -72,8 +75,8 @@ class BonusLockServiceTest {
         // 모든 작업이 끝날 때까지 대기
         //새로운 작업을 더 이상 받지 않음
         executorService.shutdown();
-        //shutdown() 이후, 스레드들이 모두 작업을 끝날 때까지 최대 10초 기다림
-        boolean terminated = executorService.awaitTermination(10, TimeUnit.SECONDS);
+        //shutdown() 이후, 스레드들이 모두 작업을 끝날 때까지 최대 100초 기다림
+        boolean terminated = executorService.awaitTermination(100, TimeUnit.SECONDS);
         if (!terminated) {
             log.warn("스레드 작업이 시간 내에 끝나지 않았습니다.");
         }
@@ -86,10 +89,73 @@ class BonusLockServiceTest {
             Crew crew = crewRepository.findByEmail(member.getUsername()).get();
             log.info("crew : {}", crew.getCrewId());
             int money = bonusCrewRepository.findByIdBonusIdAndIdCrewId(bonusId, crew.getCrewId())
-                        .get().getMoney();
-            Assertions.assertThat(money).isEqualTo(300);
+                    .get().getMoney();
+            Assertions.assertThat(money).isEqualTo(30_000);
 
         }
+    }
+
+    @DisplayName("Crew1 : 300, Crew2 : 300, Crew3 : 300를 가져간다.")
+    @Test
+    void bonusRedisServiceTest() throws InterruptedException {
+        //given
+        CustomUserDetails customUserDetails = new CustomUserDetails(
+                new CommonUserInfo(
+                        "arba2@naver.com",
+                        "arbaguette",
+                        "BOSS"
+                )
+        );
+        int bonusId = bonusService.spreadBonus(customUserDetails, 90_000, 1);
+
+        log.info("bonusId : {}", bonusId);
+
+        List<CustomUserDetails> members = getCrews();
+
+        //when
+//        AtomicInteger successCount = new AtomicInteger(0);
+//        AtomicInteger failCount = new AtomicInteger(0);
+        // 시간 측정 시작
+        long startTime = System.nanoTime();
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        for (CustomUserDetails member : members) {
+            executorService.submit(() -> {
+                for (int j = 0; j < 300; j++) {
+                    try {
+                        bonusService.getBonus(member, bonusId);
+//                        successCount.incrementAndGet();
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+//                        failCount.incrementAndGet();
+                    }
+                }
+            });
+        }
+
+        // 모든 작업이 끝날 때까지 대기
+        // 새로운 작업을 더 이상 받지 않음
+        executorService.shutdown();
+
+        //shutdown() 이후, 스레드들이 모두 작업을 끝날 때까지 최대 10초 기다림
+        boolean terminated = executorService.awaitTermination(100, TimeUnit.SECONDS);
+        if (!terminated) {
+            log.warn("스레드 작업이 시간 내에 끝나지 않았습니다.");
+        }
+
+        // 시간 측정 종료
+        long endTime = System.nanoTime();
+        long durationMs = (endTime - startTime) / 1_000_000; // 밀리초로 변환
+        log.info("✅ 테스트 총 수행 시간: {}ms", durationMs);
+
+        //then
+//        for (CustomUserDetails member : members) {
+//            Crew crew = crewRepository.findByEmail(member.getUsername()).get();
+//            log.info("crew : {}", crew.getCrewId());
+//            int money = bonusCrewRepository.findByIdBonusIdAndIdCrewId(bonusId, crew.getCrewId())
+//                    .get().getMoney();
+//            Assertions.assertThat(money).isEqualTo(300);
+//        }
+
     }
 
     private List<CustomUserDetails> getCrews() {
