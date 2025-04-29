@@ -11,11 +11,9 @@ import com.lucky.arbaguette.common.exception.BadRequestException;
 import com.lucky.arbaguette.common.exception.NotFoundException;
 import com.lucky.arbaguette.common.service.BankService;
 import com.lucky.arbaguette.common.service.NotificationService;
-import com.lucky.arbaguette.company.domain.Company;
 import com.lucky.arbaguette.company.repository.CompanyRepository;
 import com.lucky.arbaguette.crew.domain.Crew;
 import com.lucky.arbaguette.crew.repository.CrewRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -39,7 +37,7 @@ public class BonusService {
     private final CompanyRepository companyRepository;
 
     @Transactional
-    public void spreadBonus(CustomUserDetails customUserDetails, int money, int companyId) {
+    public int spreadBonus(CustomUserDetails customUserDetails, int money, int companyId) {
         Boss boss = bossRepository.findByEmail(customUserDetails.getUsername())
                 .orElseThrow(() -> new NotFoundException("사장님을 찾을 수 없습니다."));
 
@@ -63,6 +61,7 @@ public class BonusService {
 ////                    "arbaguette://crew/authorized/banking/transaction" //빵줍기 url 변경해야함 !!!!!!
 //            );
 //        }
+        return bonus.getBonusId();
     }
 
     public void getBonus(CustomUserDetails customUserDetails, int bonusId) {

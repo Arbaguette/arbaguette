@@ -34,7 +34,7 @@ public class BonusLockService {
         Boss boss = bossRepository.findByEmail(customUserDetails.getUsername())
                 .orElseThrow(() -> new NotFoundException("사장님을 찾을 수 없습니다."));
 
-        bankService.depositAccountWithdraw(boss, money);
+//        bankService.depositAccountWithdraw(boss, money);
 
         Bonus bonus = bonusRepository.save(Bonus.builder()
                 .boss(boss)
